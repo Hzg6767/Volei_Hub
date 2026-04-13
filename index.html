@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>VoleiHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#030D1F;color:#F0F4FF;font-family:'Exo 2',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1D4ED8;border-radius:4px}
+input,select,button{font-family:'Exo 2',sans-serif;}
+select{appearance:none;-webkit-appearance:none;}
+.screen{display:none;padding-bottom:90px;min-height:100vh;}
+.screen.active{display:block;}
+.screen.fullscreen{padding-bottom:0;}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(10,22,40,0.96);backdrop-filter:blur(20px);border-top:1px solid rgba(59,130,246,0.2);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));}
+.nav-btn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;color:#475569;transition:color .2s;}
+.nav-btn.active{color:#EAB308;}
+.nav-btn .pip{padding:6px 16px;border-radius:12px;transition:background .2s;}
+.nav-btn.active .pip{background:rgba(234,179,8,0.12);}
+.nav-btn span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+.modal-bg{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,20,60,.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:#0A1628;border:1px solid rgba(59,130,246,.3);border-radius:20px;padding:28px 24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,.6);}
+.modal.wide{max-width:560px;}
+.modal h2{color:#F0F4FF;font-size:20px;margin-bottom:20px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.lbl{display:block;color:#94A3B8;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.inp{width:100%;background:#0D1F3C;border:1.5px solid rgba(59,130,246,.25);border-radius:10px;padding:10px 14px;color:#F0F4FF;font-size:15px;outline:none;margin-bottom:16px;}
+.inp:focus{border-color:#3B82F6;}
+.btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;border:none;border-radius:12px;padding:12px 20px;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;letter-spacing:.03em;}
+.btn:active{transform:scale(.97);}
+.btn.full{width:100%;}
+.btn.sm{padding:8px 16px;font-size:13px;border-radius:10px;}
+.badge{background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;display:inline-block;}
+.card{background:#0A1628;border-radius:16px;padding:18px;border:1px solid rgba(59,130,246,.15);margin-bottom:12px;}
+.section-title{color:#94A3B8;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:20px 0 12px;}
+.page-header{background:linear-gradient(135deg,#0A1628 0%,#0D1F3C 100%);padding:56px 24px 24px;border-bottom:1px solid rgba(59,130,246,.15);}
+.page-header h1{font-size:26px;font-weight:900;margin-bottom:4px;}
+.page-header p{color:#475569;font-size:14px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes wave{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1.5)}}
+#loading-screen{position:fixed;inset:0;background:#030D1F;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s;}
+.vball-pulse{animation:pulse 1.5s ease-in-out infinite;}
+.wave-bar{width:6px;height:24px;background:#1D4ED8;border-radius:3px;}
+/* Score live screen */
+#score-live{display:none;flex-direction:column;min-height:100vh;background:#020810;position:fixed;inset:0;z-index:200;}
+#score-live.active{display:flex;}
+#sl-zone-b{transform:rotate(180deg)!important;}
+@media (orientation:landscape){
+  #score-live{flex-direction:row;height:auto;}
+  #sl-zone-a,#sl-zone-b{flex-direction:column!important;min-height:0!important;}
+  #sl-score-a,#sl-score-b{font-size:70px!important;}
+  #sl-add-a,#sl-add-b{width:70px!important;height:70px!important;}
+  #sl-add-a svg,#sl-add-b svg{width:24px!important;height:24px!important;}
+  #sl-btns-a,#sl-btns-b{flex-wrap:wrap;gap:10px!important;}
+}
+#qgame-screen{display:none;min-height:100vh;position:fixed;inset:0;z-index:200;background:#030D1F;overflow-y:auto;padding-bottom:20px;}
+#qgame-screen.active{display:block;}
+.color-dot{width:34px;height:34px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:transform .15s;}
+.color-dot.selected{border-color:#fff;transform:scale(1.15);}
+.tab-btn{flex:1;background:none;border:none;padding:12px 0;font-weight:700;font-size:14px;font-family:'Exo 2',sans-serif;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;color:#475569;}
+.tab-btn.active{color:#EAB308;border-bottom-color:#EAB308;}
+.game-card{background:#0A1628;border-radius:16px;padding:16px;border:1px solid rgba(59,130,246,.15);margin-bottom:12px;}
+.game-card-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);}
+/* Bracket styles */
+.bracket-container{overflow-x:auto;padding:20px 0;}
+.bracket-phase{display:inline-flex;flex-direction:column;justify-content:space-around;min-width:140px;margin-right:30px;position:relative;}
+.bracket-phase-title{font-size:11px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;text-align:center;}
+.bracket-game{background:#0D1F3C;border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:10px;margin-bottom:16px;min-width:130px;cursor:pointer;transition:all .2s;}
+.bracket-game:hover{background:#0D1F3C;border-color:#3B82F6;box-shadow:0 0 12px rgba(59,130,246,.3);}
+.bracket-team-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.bracket-team-row:last-child{margin-bottom:0;}
+.bracket-team-score{font-size:12px;color:#94A3B8;}
+.bracket-team-name{font-size:12px;color:#F0F4FF;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bracket-team-color-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.bracket-divider{border-top:1px solid rgba(59,130,246,.2);margin:4px 0;}
+/* Confirm danger dialog */
+#confirm-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;}
+#confirm-modal.open{display:flex;}
+/* Delete button subtle */
+.delete-btn-subtle{opacity:0.25;transition:opacity .2s;overflow:visible;position:relative;}
+.delete-btn-subtle:hover{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADING SCREEN ═══════════════════════════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="vball-pulse" style="margin-bottom:24px;">
+    <div style="width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#1D4ED8,#0A1628);border:3px solid #3B82F6;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(59,130,246,.5);font-size:56px;">
+      🏐
+    </div>
+  </div>
+  <div style="animation:fadeUp .5s .3s both;text-align:center;">
+    <h1 style="font-size:38px;font-weight:900;letter-spacing:-.02em;">Volei<span style="color:#EAB308;">Hub</span></h1>
+    <p style="color:#3B82F6;font-size:13px;letter-spacing:.15em;text-transform:uppercase;margin-top:6px;">Sistema Voleibosístico</p>
+  </div>
+  <div style="display:flex;gap:6px;margin-top:36px;" id="wave-bars"></div>
+</div>
+
+<!-- ═══ SCORE LIVE (fullscreen overlay) ═══════════════════════════════════════ -->
+<div id="score-live">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:50px 20px 16px;">
+    <button onclick="closeLive()" style="background:rgba(255,255,255,.08);border:none;border-radius:10px;padding:10px;cursor:pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+    </button>
+    <div style="text-align:center;">
+      <div id="sl-set-info" style="color:#64748B;font-size:11px;letter-spacing:.1em;text-transform:uppercase;">Set 1 de 3</div>
+      <div id="sl-sets-won" style="color:#94A3B8;font-size:12px;margin-top:2px;">0 – 0 sets</div>
+    </div>
+    <button onclick="liveFlip()" style="background:rgba(255,255,255,.08);border:none;border-radius:10px;padding:10px;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="17,1 21,5 17,9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7,23 3,19 7,15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+  </div>
+  <!-- Winner banner -->
+  <div id="sl-winner" style="display:none;margin:0 20px 16px;background:#EAB30822;border-radius:14px;padding:16px;text-align:center;border:1px solid #EAB30866;">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EAB308" stroke-width="2"><polyline points="8,21 12,21 16,21"/><line x1="12" y1="17" x2="12" y2="21"/><path d="M7 4H17L17 11a5 5 0 0 1-10 0z"/><path d="M5 9H3a2 2 0 0 1-2-2V5h6"/><path d="M19 9h2a2 2 0 0 0 2-2V5h-6"/></svg>
+    <div id="sl-winner-name" style="color:#EAB308;font-weight:900;font-size:20px;margin:6px 0 10px;"></div>
+    <button onclick="saveLiveResult()" class="btn sm" style="background:#EAB308;color:#000;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+      Salvar e Sair
+    </button>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;">
+    <!-- Team A -->
+    <div id="sl-zone-a" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+      <div id="sl-name-a" style="font-weight:900;font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;color:#3B82F6;">TIME A</div>
+      <div id="sl-score-a" style="color:#F0F4FF;font-size:100px;font-weight:900;line-height:1;">0</div>
+      <div id="sl-btns-a" style="display:flex;gap:14px;margin-top:16px;">
+        <button onclick="undoPt('a')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:12px;width:50px;height:50px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button id="sl-add-a" onclick="addPt('a')" style="border-radius:16px;width:86px;height:86px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px solid #3B82F6;background:rgba(59,130,246,.2);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div style="height:2px;background:linear-gradient(90deg,transparent,#3B82F6,transparent);"></div>
+    <!-- Team B -->
+    <div id="sl-zone-b" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+      <div id="sl-btns-b" style="display:flex;gap:14px;margin-bottom:16px;">
+        <button onclick="undoPt('b')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:12px;width:50px;height:50px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button id="sl-add-b" onclick="addPt('b')" style="border-radius:16px;width:86px;height:86px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:2px solid #EF4444;background:rgba(239,68,68,.2);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div id="sl-score-b" style="color:#F0F4FF;font-size:100px;font-weight:900;line-height:1;">0</div>
+      <div id="sl-name-b" style="font-weight:900;font-size:15px;letter-spacing:.08em;text-transform:uppercase;margin-top:8px;color:#EF4444;">TIME B</div>
+    </div>
+  </div>
+  <div id="sl-sets-row" style="padding:12px 20px 24px;display:flex;gap:8px;justify-content:center;"></div>
+</div>
+
+<!-- ═══ QUICK GAME SCREEN ═══════════════════════════════════════════════════ -->
+<div id="qgame-screen" style="background:#020810;position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(135deg,#0A1628,#0D1F3C);border-radius:20px;padding:40px 32px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.8);text-align:center;">
+    <button onclick="closeQGame()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:none;border-radius:10px;padding:8px;cursor:pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div style="width:50px;height:50px;border-radius:14px;background:rgba(124,58,237,.2);border:2px solid #7C3AED;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#A78BFA"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+    </div>
+    <h1 style="font-size:26px;font-weight:900;margin:0 0 8px;color:#F0F4FF;">Jogo Rápido</h1>
+    <p style="color:#7C3AED;font-size:13px;font-weight:600;margin:0 0 28px;">Começa agora</p>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+      <div>
+        <label class="lbl" style="display:block;margin-bottom:8px;">Pontos</label>
+        <select class="inp" id="qg-pts" style="width:100%;">
+          <option value="15">15</option>
+          <option value="21">21</option>
+          <option value="25" selected>25</option>
+        </select>
+      </div>
+      <div>
+        <label class="lbl" style="display:block;margin-bottom:8px;">Sets</label>
+        <select class="inp" id="qg-sets" style="width:100%;">
+          <option value="1">Melhor de 1</option>
+          <option value="3" selected>Melhor de 3</option>
+          <option value="5">Melhor de 5</option>
+        </select>
+      </div>
+    </div>
+    
+    <button onclick="startQGame()" class="btn full" style="background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;font-size:16px;font-weight:700;padding:14px;">
+      ⚡ Começar Agora
+    </button>
+  </div>
+</div>
+
+<!-- ═══ NAV ═══════════════════════════════════════════════════════════════════ -->
+<nav class="nav" id="main-nav">
+  <button class="nav-btn active" onclick="goScreen('home')" id="nav-home">
+    <div class="pip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div>
+    <span>Início</span>
+  </button>
+  <button class="nav-btn" onclick="goScreen('score')" id="nav-score">
+    <div class="pip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+    <span>Placar</span>
+  </button>
+  <button class="nav-btn" onclick="goScreen('teams')" id="nav-teams">
+    <div class="pip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <span>Times</span>
+  </button>
+  <button class="nav-btn" onclick="goScreen('games')" id="nav-games">
+    <div class="pip"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+    <span>Jogos</span>
+  </button>
+</nav>
+
+<!-- ═══ HOME ══════════════════════════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div style="background:linear-gradient(135deg,#0A1628 0%,#0D1F3C 100%);padding:60px 24px 32px;border-bottom:1px solid rgba(59,130,246,.15);">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#1D4ED8,#0A1628);border:2px solid #3B82F6;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(59,130,246,.4);font-size:28px;">
+          🏐
+        </div>
+        <div>
+          <h1 style="font-size:26px;font-weight:900;">Volei<span style="color:#EAB308;">Hub</span></h1>
+          <p style="color:#3B82F6;font-size:10px;letter-spacing:.12em;text-transform:uppercase;">Sistema Voleibosístico</p>
+        </div>
+      </div>
+      <div id="adm-area"></div>
+    </div>
+  </div>
+  <!-- Stats -->
+  <div style="padding:20px 24px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+    <div style="background:#0A1628;border-radius:16px;padding:16px 12px;border:1px solid rgba(59,130,246,.25);text-align:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div id="stat-teams" style="color:#F0F4FF;font-size:24px;font-weight:900;margin:6px 0 2px;">0</div>
+      <div style="color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">Times</div>
+    </div>
+    <div style="background:#0A1628;border-radius:16px;padding:16px 12px;border:1px solid rgba(234,179,8,.25);text-align:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAB308" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div id="stat-players" style="color:#F0F4FF;font-size:24px;font-weight:900;margin:6px 0 2px;">0</div>
+      <div style="color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">Jogadores</div>
+    </div>
+    <div style="background:#0A1628;border-radius:16px;padding:16px 12px;border:1px solid rgba(16,185,129,.25);text-align:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <div id="stat-games" style="color:#F0F4FF;font-size:24px;font-weight:900;margin:6px 0 2px;">0</div>
+      <div style="color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.06em;">Jogos</div>
+    </div>
+  </div>
+  <!-- Big Buttons -->
+  <div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <button onclick="goScreen('score')" style="background:linear-gradient(135deg,#1D4ED8ee,#1D4ED899);border:1px solid #1D4ED8;border-radius:18px;padding:22px 18px;cursor:pointer;text-align:left;box-shadow:0 8px 24px rgba(29,78,216,.44);" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <div style="color:#fff;font-size:18px;font-weight:800;margin-top:10px;">Placar</div>
+      <div style="color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;">Ao vivo</div>
+    </button>
+    <button onclick="goScreen('teams')" style="background:linear-gradient(135deg,#065F46ee,#065F4699);border:1px solid #065F46;border-radius:18px;padding:22px 18px;cursor:pointer;text-align:left;box-shadow:0 8px 24px rgba(6,95,70,.44);" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div style="color:#fff;font-size:18px;font-weight:800;margin-top:10px;">Times</div>
+      <div style="color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;">Gerenciar</div>
+    </button>
+    <button onclick="goScreen('games')" style="background:linear-gradient(135deg,#92400Eee,#92400E99);border:1px solid #92400E;border-radius:18px;padding:22px 18px;cursor:pointer;text-align:left;box-shadow:0 8px 24px rgba(146,64,14,.44);" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <div style="color:#fff;font-size:18px;font-weight:800;margin-top:10px;">Jogos</div>
+      <div style="color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;">Agenda</div>
+    </button>
+    <button onclick="openQGame()" style="background:linear-gradient(135deg,#7C3AEDee,#7C3AED99);border:1px solid #7C3AED;border-radius:18px;padding:22px 18px;cursor:pointer;text-align:left;box-shadow:0 8px 24px rgba(124,58,237,.44);" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform=''">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+      <div style="color:#fff;font-size:18px;font-weight:800;margin-top:10px;">Jogo Rápido</div>
+      <div style="color:rgba(255,255,255,.65);font-size:12px;margin-top:2px;">Começar agora</div>
+    </button>
+  </div>
+  <!-- Today's Games -->
+  <div style="padding:0 24px 20px;">
+    <p class="section-title">Jogos de Hoje</p>
+    <div id="home-today-games"></div>
+  </div>
+</div>
+
+<!-- ═══ SCORE MENU ════════════════════════════════════════════════════════════ -->
+<div id="screen-score" class="screen">
+  <div class="page-header">
+    <h1>Placar</h1>
+    <p>Controle de pontuação ao vivo</p>
+  </div>
+  <div style="padding:20px 24px;">
+    <div class="card" style="margin-bottom:20px;">
+      <p class="section-title" style="margin-top:0;">Configuração do Jogo</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label class="lbl">Sets</label>
+          <select class="inp" id="sc-sets">
+            <option value="1">Melhor de 1</option>
+            <option value="3" selected>Melhor de 3</option>
+            <option value="5">Melhor de 5</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Pontos por Set</label>
+          <select class="inp" id="sc-pts">
+            <option value="15">15 pts</option>
+            <option value="21">21 pts</option>
+            <option value="25" selected>25 pts</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button onclick="openQGame()" style="width:100%;background:linear-gradient(135deg,#7C3AED,#5B21B6);border:none;border-radius:16px;padding:18px;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:16px;box-shadow:0 8px 24px rgba(124,58,237,.4);">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+      <div style="text-align:left;">
+        <div style="color:#fff;font-weight:800;font-size:17px;">Jogo Rápido</div>
+        <div style="color:rgba(255,255,255,.6);font-size:12px;">Escolha nomes e cores — sem cadastro</div>
+      </div>
+    </button>
+    <p class="section-title">Jogos de Hoje</p>
+    <div id="sc-today-games"></div>
+  </div>
+</div>
+
+<!-- ═══ TEAMS ═════════════════════════════════════════════════════════════════ -->
+<div id="screen-teams" class="screen">
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:24px;">
+    <div>
+      <h1>Times</h1>
+      <p id="teams-count">0 times cadastrados</p>
+    </div>
+    <div id="teams-adm-btn"></div>
+  </div>
+  <div style="padding:20px 24px;" id="teams-list"></div>
+</div>
+
+<!-- ═══ TEAM DETAIL ════════════════════════════════════════════════════════════ -->
+<div id="screen-team-detail" class="screen" style="display:none;">
+  <div id="team-detail-header" style="padding:56px 24px 24px;">
+    <button onclick="goScreen('teams')" style="background:rgba(255,255,255,.1);border:none;border-radius:10px;padding:8px 14px;cursor:pointer;color:#fff;display:flex;align-items:center;gap:6px;margin-bottom:16px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg> Voltar
+    </button>
+    <div id="team-detail-info"></div>
+  </div>
+  <div style="padding:20px 24px;" id="team-detail-body"></div>
+</div>
+
+<!-- ═══ GAMES ═════════════════════════════════════════════════════════════════ -->
+<div id="screen-games" class="screen">
+  <div class="page-header" style="padding-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;">
+      <div><h1>Jogos</h1><p>Agenda e resultados</p></div>
+      <div id="games-adm-btn"></div>
+    </div>
+    <div style="display:flex;">
+      <button class="tab-btn active" id="tab-schedule" onclick="switchGamesTab('schedule')">Agenda</button>
+      <button class="tab-btn" id="tab-table" onclick="switchGamesTab('table')">Tabela</button>
+    </div>
+  </div>
+  <div style="padding:20px 24px;">
+    <div id="games-schedule"></div>
+    <div id="games-table" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ════════════════════════════════════════════════════════════════ -->
+<!-- Login -->
+<div class="modal-bg" id="modal-login">
+  <div class="modal">
+    <div class="modal-head"><h2>Login ADM · UNIP</h2><button onclick="closeModal('modal-login')" style="background:none;border:none;cursor:pointer;color:#64748B;padding:4px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <span style="color:#475569;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;">Acesso Exclusivo UNIP</span>
+    </div>
+    <label class="lbl">Usuário</label>
+    <input class="inp" id="login-user" placeholder="admin"/>
+    <label class="lbl">Senha</label>
+    <input class="inp" id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <p id="login-err" style="color:#EF4444;font-size:13px;text-align:center;margin:-8px 0 14px;display:none;">Credenciais inválidas</p>
+    <button onclick="doLogin()" class="btn full" style="background:#1D4ED8;color:#fff;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Entrar como ADM
+    </button>
+  </div>
+</div>
+
+<!-- New Team -->
+<div class="modal-bg" id="modal-new-team">
+  <div class="modal">
+    <div class="modal-head"><h2>Novo Time</h2><button onclick="closeModal('modal-new-team')" style="background:none;border:none;cursor:pointer;color:#64748B;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <label class="lbl">Nome do Time *</label>
+    <input class="inp" id="nt-name" placeholder="Ex: Falcões"/>
+    <label class="lbl">Cor do Time</label>
+    <div id="nt-colors" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;"></div>
+    <button onclick="createTeam()" class="btn full" style="background:#1D4ED8;color:#fff;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg>
+      Criar Time
+    </button>
+  </div>
+</div>
+
+<!-- New Player -->
+<div class="modal-bg" id="modal-new-player">
+  <div class="modal">
+    <div class="modal-head"><h2>Novo Jogador</h2><button onclick="closeModal('modal-new-player')" style="background:none;border:none;cursor:pointer;color:#64748B;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <label class="lbl">Nome *</label>
+    <input class="inp" id="np-name" placeholder="Nome completo"/>
+    <label class="lbl">Altura (cm)</label>
+    <input class="inp" id="np-height" type="number" placeholder="Ex: 185"/>
+    <label class="lbl">Posição *</label>
+    <select class="inp" id="np-pos"><option value="">Selecionar...</option><option>Líbero</option><option>Central</option><option>Oposto</option><option>Ponteiro</option><option>Levantador</option><option>Ponta</option></select>
+    <label class="lbl">Experiência *</label>
+    <select class="inp" id="np-exp"><option value="">Selecionar...</option><option>Iniciante</option><option>Intermediário</option><option>Intermediário+</option><option>Avançado</option></select>
+    <button onclick="createPlayer()" class="btn full" style="background:#1D4ED8;color:#fff;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Cadastrar Jogador
+    </button>
+  </div>
+</div>
+
+<!-- Player Detail -->
+<div class="modal-bg" id="modal-player-detail">
+  <div class="modal">
+    <div class="modal-head"><h2>Perfil do Jogador</h2><button onclick="closeModal('modal-player-detail')" style="background:none;border:none;cursor:pointer;color:#64748B;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div id="player-detail-body"></div>
+  </div>
+</div>
+
+<!-- New / Edit Game -->
+<div class="modal-bg" id="modal-game-form">
+  <div class="modal wide">
+    <div class="modal-head"><h2 id="game-form-title">Cadastrar Jogo</h2><button onclick="closeModal('modal-game-form')" style="background:none;border:none;cursor:pointer;color:#64748B;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <input type="hidden" id="gf-id"/>
+    <label class="lbl">Data *</label>
+    <input class="inp" id="gf-date" type="date"/>
+    <label class="lbl">Time 1 *</label>
+    <select class="inp" id="gf-t1"><option value="">Selecionar...</option></select>
+    <label class="lbl">Time 2 *</label>
+    <select class="inp" id="gf-t2"><option value="">Selecionar...</option></select>
+    <label class="lbl">Tipo</label>
+    <select class="inp" id="gf-type">
+      <option value="Amistoso">Amistoso</option>
+      <option value="Campeonato">Campeonato</option>
+      <option value="Treino">Treino</option>
+    </select>
+    <button onclick="saveGameForm()" class="btn full" style="background:#1D4ED8;color:#fff;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+      <span id="gf-btn-label">Salvar Jogo</span>
+    </button>
+  </div>
+</div>
+
+<!-- Game Details Modal -->
+<div class="modal-bg" id="modal-game-details">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h2>Detalhes do Jogo</h2>
+      <button onclick="closeModal('modal-game-details')" style="background:none;border:none;cursor:pointer;color:#64748B;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="modal-game-details-content"></div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div id="confirm-modal">
+  <div class="modal" style="max-width:340px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </div>
+      <h2 style="font-size:18px;margin-bottom:8px;">Confirmar exclusão</h2>
+      <p id="confirm-msg" style="color:#64748B;font-size:14px;">Tem certeza que deseja apagar este jogo?</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeConfirm()" class="btn full sm" style="background:rgba(255,255,255,.08);color:#94A3B8;border:1px solid rgba(255,255,255,.1);">Cancelar</button>
+      <button onclick="confirmAction()" class="btn full sm" style="background:#EF4444;color:#fff;" id="confirm-ok-btn">Apagar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ═══════════════════════════════════════════════════════════════
+  //  FIREBASE - SYNC EM TEMPO REAL
+  // ═══════════════════════════════════════════════════════════════
+  
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+  import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  
+  // ✅ CREDENCIAIS DO FIREBASE (VOLEIHUB-59A3B)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxOS_J2hpYzHhRqHVuMbgtee7PeI3mzkw",
+    authDomain: "voleihub-59a3b.firebaseapp.com",
+    projectId: "voleihub-59a3b",
+    databaseURL: "https://voleihub-59a3b-default-rtdb.firebaseio.com",
+    storageBucket: "voleihub-59a3b.firebasestorage.app",
+    messagingSenderId: "676471158395",
+    appId: "1:676471158395:web:5c32235b390cfcb89ad4de"
+  };
+  
+  let fbApp, fbDb, fbFs, fbEnabled = false;
+  
+  try {
+    fbApp = initializeApp(firebaseConfig);
+    fbDb = getDatabase(fbApp);
+    fbFs = getFirestore(fbApp);
+    fbEnabled = true;
+    console.log("✅ Firebase inicializado com sucesso - voleihub-59a3b");
+  } catch (e) {
+    console.warn("⚠️ Firebase não configurado. Usando apenas localStorage.", e);
+    fbEnabled = false;
+  }
+  
+  // Expor Firebase globalmente para uso no resto do código
+  window.fbSync = {
+    enabled: fbEnabled,
+    db: fbDb,
+    fs: fbFs,
+    
+    // 📊 Sincronizar score em tempo real
+    syncScore(gameId, scoreA, scoreB, timestamp = Date.now()) {
+      if (!fbEnabled || !fbDb) return;
+      try {
+        set(ref(fbDb, `live_scores/${gameId}`), {
+          scoreA,
+          scoreB,
+          timestamp,
+          updated: new Date().toLocaleString('pt-BR')
+        }).catch(err => console.warn("Firebase score sync:", err));
+      } catch (e) {
+        console.warn("Score sync failed:", e);
+      }
+    },
+    
+    // 👂 Escutar mudanças no score em tempo real
+    listenScore(gameId, callback) {
+      if (!fbEnabled || !fbDb) return;
+      try {
+        onValue(ref(fbDb, `live_scores/${gameId}`), (snapshot) => {
+          if (snapshot.exists()) {
+            callback(snapshot.val());
+          }
+        });
+      } catch (e) {
+        console.warn("Listen score failed:", e);
+      }
+    },
+    
+    // 💾 Salvar partida no histórico (Firestore)
+    async saveGameHistory(gameData) {
+      if (!fbEnabled || !fbFs) return;
+      try {
+        const docRef = await addDoc(collection(fbFs, "historico_jogos"), {
+          ...gameData,
+          savedAt: new Date(),
+          device: navigator.userAgent.substring(0, 50)
+        });
+        console.log("✅ Partida salva no histórico:", docRef.id);
+        return docRef.id;
+      } catch (e) {
+        console.warn("History save failed:", e);
+      }
+    },
+    
+    // 🔄 Carregar histórico de partidas
+    async loadGameHistory(limitCount = 10) {
+      if (!fbEnabled || !fbFs) return [];
+      try {
+        const q = query(
+          collection(fbFs, "historico_jogos"),
+          orderBy("savedAt", "desc"),
+          limit(limitCount)
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (e) {
+        console.warn("History load failed:", e);
+        return [];
+      }
+    },
+    
+    // 🗑️ Limpar score em tempo real
+    clearScore(gameId) {
+      if (!fbEnabled || !fbDb) return;
+      try {
+        remove(ref(fbDb, `live_scores/${gameId}`));
+      } catch (e) {
+        console.warn("Clear score failed:", e);
+      }
+    }
+  };
+  
+  console.log("📡 Módulo de sincronização disponível em: window.fbSync");
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════════
+const TEAM_COLORS=[
+  {name:"Vermelho",hex:"#EF4444"},{name:"Azul",hex:"#3B82F6"},{name:"Verde",hex:"#10B981"},
+  {name:"Laranja",hex:"#F97316"},{name:"Roxo",hex:"#8B5CF6"},{name:"Rosa",hex:"#EC4899"},
+  {name:"Amarelo",hex:"#EAB308"},{name:"Ciano",hex:"#06B6D4"},
+];
+const EXP_COLOR={"Iniciante":"#10B981","Intermediário":"#3B82F6","Intermediário+":"#8B5CF6","Avançado":"#EF4444"};
+
+function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function lsSave(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+
+let teams=ls('vh_teams',[]);
+let players=ls('vh_players',[]);
+let games=ls('vh_games',[]);
+let champion=ls('vh_champion',null);
+let admin=null;
+let currentTeamId=null;
+let pendingConfirmFn=null;
+
+function save(){
+  lsSave('vh_teams',teams);
+  lsSave('vh_players',players);
+  lsSave('vh_games',games);
+  lsSave('vh_champion',champion);
+  // Sincronizar estado com Firebase
+  if(window.fbSync && window.fbSync.enabled){
+    try{
+      window.fbSync.db && fbSync.enabled && console.log("📡 Estado sincronizado com Firebase");
+    }catch(e){
+      console.warn("Firebase sync disabled");
+    }
+  }
+}
+
+// Get text color based on background brightness
+function getTextColor(bgColor){
+  const hex=bgColor.replace('#','');
+  const r=parseInt(hex.substring(0,2),16);
+  const g=parseInt(hex.substring(2,4),16);
+  const b=parseInt(hex.substring(4,6),16);
+  const brightness=(r*299+g*587+b*114)/1000;
+  return brightness>155?'#000':('#fff');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOADING
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  const bars=document.getElementById('wave-bars');
+  for(let i=0;i<4;i++){
+    const b=document.createElement('div');
+    b.className='wave-bar';
+    b.style.animation=`wave 1s ${i*.15}s ease-in-out infinite`;
+    bars.appendChild(b);
+  }
+  setTimeout(()=>{
+    const ls=document.getElementById('loading-screen');
+    ls.style.opacity='0';
+    setTimeout(()=>{ls.style.display='none';renderAll();},400);
+  },2000);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+const SCREENS=['home','score','teams','team-detail','games'];
+function goScreen(id){
+  SCREENS.forEach(s=>{
+    const el=document.getElementById('screen-'+s);
+    if(el){el.style.display=s===id?'block':'none';}
+  });
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('nav-'+id);
+  if(nb)nb.classList.add('active');
+  if(id==='home')renderHome();
+  if(id==='score')renderScoreMenu();
+  if(id==='teams')renderTeams();
+  if(id==='games')renderGames();
+}
+// init visible state
+document.querySelectorAll('.screen').forEach(s=>{s.style.display='none';});
+document.getElementById('screen-home').style.display='block';
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll(){renderHome();renderScoreMenu();renderTeams();renderGames();updateAdmArea();}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADM AREA
+// ═══════════════════════════════════════════════════════════════
+function updateAdmArea(){
+  const el=document.getElementById('adm-area');
+  if(admin){
+    el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;">
+      <div style="text-align:right;"><div style="color:#EAB308;font-size:11px;font-weight:700;">ADM</div><div style="color:#475569;font-size:10px;">UNIP</div></div>
+      <button onclick="doLogout()" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:8px;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button></div>`;
+  }else{
+    el.innerHTML=`<button onclick="openModal('modal-login')" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:12px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span style="color:#3B82F6;font-size:12px;font-weight:700;">ADM</span></button>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════════
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-err');
+  if(u==='admin'&&p==='unip2024'){
+    admin={name:'Administrador UNIP',role:'ADM'};
+    closeModal('modal-login');
+    document.getElementById('login-user').value='';
+    document.getElementById('login-pass').value='';
+    err.style.display='none';
+    updateAdmArea();
+    renderTeams();renderGames();renderScoreMenu();renderHome();
+  }else{err.style.display='block';}
+}
+function doLogout(){admin=null;updateAdmArea();renderTeams();renderGames();renderScoreMenu();}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openConfirm(msg,fn){
+  document.getElementById('confirm-msg').textContent=msg;
+  pendingConfirmFn=fn;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirm-modal').classList.remove('open');pendingConfirmFn=null;}
+function confirmAction(){if(pendingConfirmFn)pendingConfirmFn();closeConfirm();}
+
+// ═══════════════════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════════════════
+function renderHome(){
+  document.getElementById('stat-teams').textContent=teams.length;
+  document.getElementById('stat-players').textContent=players.length;
+  document.getElementById('stat-games').textContent=games.length;
+  const today=new Date().toISOString().split('T')[0];
+  const tg=games.filter(g=>g.date===today);
+  const el=document.getElementById('home-today-games');
+  if(!tg.length){el.innerHTML=`<div style="background:#0A1628;border-radius:14px;padding:20px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;font-size:14px;">Nenhum jogo agendado para hoje</div>`;return;}
+  el.innerHTML=tg.map(g=>{
+    const t1=teams.find(t=>t.id===g.team1Id);
+    const t2=teams.find(t=>t.id===g.team2Id);
+    const t1Color=t1?.color||'#3B82F6';
+    const t2Color=t2?.color||'#EF4444';
+    return `<div style="background:#0A1628;border-radius:14px;padding:14px 16px;border:1px solid rgba(59,130,246,.2);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+      <div><span style="color:${getTextColor(t1Color)};font-weight:700;">${t1?.name||'?'}</span> <span style="color:#475569;font-size:12px;">vs</span> <span style="color:${getTextColor(t2Color)};font-weight:700;">${t2?.name||'?'}</span></div>
+      <span class="badge">${g.type}</span></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SCORE MENU
+// ═══════════════════════════════════════════════════════════════
+function renderScoreMenu(){
+  const today=new Date().toISOString().split('T')[0];
+  const tg=games.filter(g=>g.date===today&&!g.result);
+  const el=document.getElementById('sc-today-games');
+  if(!tg.length){el.innerHTML=`<div style="background:#0A1628;border-radius:14px;padding:20px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;font-size:14px;">Nenhum jogo agendado para hoje</div>`;return;}
+  el.innerHTML=tg.map(g=>{
+    const t1=teams.find(t=>t.id===g.team1Id);
+    const t2=teams.find(t=>t.id===g.team2Id);
+    const t1Color=t1?.color||'#3B82F6';
+    const t2Color=t2?.color||'#EF4444';
+    return `<div style="background:#0A1628;border-radius:14px;padding:14px 16px;border:1px solid rgba(59,130,246,.2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div><span style="color:${getTextColor(t1Color)};font-weight:700;font-size:15px;">${t1?.name||'?'}</span> <span style="color:#475569;font-size:12px;">vs</span> <span style="color:${getTextColor(t2Color)};font-weight:700;font-size:15px;">${t2?.name||'?'}</span><br><span class="badge" style="margin-top:4px;">${g.type}</span></div>
+      <button onclick="startScheduledGame(${g.id})" class="btn sm" style="background:#1D4ED8;color:#fff;">Iniciar</button></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TEAMS
+// ═══════════════════════════════════════════════════════════════
+function renderTeams(){
+  document.getElementById('teams-count').textContent=`${teams.length} time${teams.length!==1?'s':''} cadastrado${teams.length!==1?'s':''}`;
+  const admBtn=document.getElementById('teams-adm-btn');
+  admBtn.innerHTML=admin?`<button onclick="openNewTeamModal()" class="btn sm" style="background:#1D4ED8;color:#fff;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo</button>`:'';
+  const el=document.getElementById('teams-list');
+  if(!teams.length){el.innerHTML=`<div style="background:#0A1628;border-radius:14px;padding:32px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><p style="margin-top:12px;font-size:14px;">Nenhum time cadastrado ainda</p></div>`;return;}
+  el.innerHTML=teams.map(t=>{
+    const tp=players.filter(p=>p.teamId===t.id);
+    const cap=players.find(p=>p.id===t.captain);
+    return `<div style="background:#0A1628;border-radius:16px;padding:18px;border:1px solid ${t.color}44;margin-bottom:12px;position:relative;box-shadow:0 4px 20px ${t.color}11;">
+      ${admin?`<button onclick="deleteTeam(${t.id})" class="delete-btn-subtle" style="position:absolute;top:8px;right:8px;background:none;border:none;color:#EF4444;font-size:20px;cursor:pointer;width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;" title="Remover time">✕</button>`:''}
+      <div onclick="openTeamDetail(${t.id})" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:52px;height:52px;border-radius:14px;background:${t.color}33;border:2px solid ${t.color};display:flex;align-items:center;justify-content:center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div style="flex:1;">
+            <h3 style="font-size:18px;font-weight:800;margin-bottom:4px;">${t.name}</h3>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="color:#64748B;font-size:13px;">${tp.length} jogador${tp.length!==1?'es':''}</span>
+              ${cap?`<span style="color:#EAB308;font-size:12px;">★ ${cap.name}</span>`:''}
+            </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let ntColorIdx=1;
+function openNewTeamModal(){
+  ntColorIdx=1;
+  document.getElementById('nt-name').value='';
+  const el=document.getElementById('nt-colors');
+  el.innerHTML=TEAM_COLORS.map((c,i)=>`
+    <button onclick="selectNTColor(${i})" id="nt-col-${i}" style="background:${c.hex}22;border:2px solid ${i===1?c.hex:'transparent'};border-radius:10px;padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="width:24px;height:24px;border-radius:50%;background:${c.hex};"></div>
+      <span style="color:#94A3B8;font-size:10px;">${c.name}</span>
+    </button>`).join('');
+  openModal('modal-new-team');
+}
+function selectNTColor(i){
+  ntColorIdx=i;
+  TEAM_COLORS.forEach((_,j)=>{
+    const b=document.getElementById('nt-col-'+j);
+    if(b)b.style.borderColor=j===i?TEAM_COLORS[j].hex:'transparent';
+  });
+}
+function createTeam(){
+  const name=document.getElementById('nt-name').value.trim();
+  if(!name)return;
+  const col=TEAM_COLORS[ntColorIdx];
+  teams.push({id:Date.now(),name,color:col.hex,colorName:col.name,captain:null});
+  save();closeModal('modal-new-team');renderTeams();renderHome();
+}
+
+function deleteTeam(teamId){
+  if(!admin)return;
+  if(!confirm('Remover este time? Todos os jogadores e jogos serão deletados.'))return;
+  teams=teams.filter(t=>t.id!==teamId);
+  players=players.filter(p=>p.teamId!==teamId);
+  games=games.filter(g=>g.team1Id!==teamId&&g.team2Id!==teamId);
+  save();renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TEAM DETAIL
+// ═══════════════════════════════════════════════════════════════
+function openTeamDetail(id){
+  currentTeamId=id;
+  const t=teams.find(t=>t.id===id);
+  const tp=players.filter(p=>p.teamId===id);
+  const hdr=document.getElementById('team-detail-header');
+  hdr.style.background=`linear-gradient(135deg,${t.color}44,#0A1628)`;
+  hdr.style.borderBottom=`1px solid ${t.color}44`;
+  hdr.style.paddingBottom='24px';
+  document.getElementById('team-detail-info').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:${t.color};display:flex;align-items:center;justify-content:center;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      </div>
+      <div>
+        <h1 style="font-size:24px;font-weight:900;">${t.name}</h1>
+        <span style="color:${t.color};font-size:12px;font-weight:600;">${tp.length} jogador${tp.length!==1?'es':''}</span>
+      </div>
+    </div>`;
+  renderTeamDetailBody(id);
+  // show team detail screen
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById('screen-team-detail').style.display='block';
+}
+
+function renderTeamDetailBody(id){
+  const t=teams.find(t=>t.id===id);
+  const tp=players.filter(p=>p.teamId===id);
+  const th=games.filter(g=>(g.team1Id===id||g.team2Id===id)&&g.result);
+  const body=document.getElementById('team-detail-body');
+  let html='';
+  if(admin){
+    html+=`<button onclick="openNewPlayerModal()" class="btn full" style="background:${t.color};color:#fff;margin-bottom:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Adicionar Jogador</button>`;
+  }
+  html+=`<p class="section-title">Jogadores</p>`;
+  if(!tp.length)html+=`<div style="color:#475569;text-align:center;padding:20px;font-size:14px;">Nenhum jogador cadastrado</div>`;
+  html+=tp.map(p=>`
+    <div onclick="openPlayerDetail(${p.id})" style="background:#0A1628;border-radius:14px;padding:14px 16px;border:1px solid ${t.color}33;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${t.color}33;border:2px solid ${t.color};display:flex;align-items:center;justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:15px;">${p.name} ${t.captain===p.id?'<span style="color:#EAB308;">★</span>':''}</div>
+          <div style="color:#64748B;font-size:12px;">${p.position} · ${p.height?p.height+'cm':'–'}</div>
+        </div>
+      </div>
+      <span style="background:${EXP_COLOR[p.experience]||'#3B82F6'}22;color:${EXP_COLOR[p.experience]||'#3B82F6'};border:1px solid ${EXP_COLOR[p.experience]||'#3B82F6'}44;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">${p.experience}</span>
+    </div>`).join('');
+  html+=`<p class="section-title">Histórico de Partidas</p>`;
+  if(!th.length)html+=`<div style="color:#475569;text-align:center;padding:20px;font-size:14px;">Sem partidas registradas</div>`;
+  html+=th.map(g=>{
+    const opp=g.team1Id===id?teams.find(t=>t.id===g.team2Id):teams.find(t=>t.id===g.team1Id);
+    const won=g.result?.winner===id;
+    return `<div style="background:#0A1628;border-radius:14px;padding:12px 16px;border:1px solid rgba(255,255,255,.05);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="color:#94A3B8;font-size:13px;">${g.date}</div><div style="color:#64748B;font-size:12px;">vs ${opp?.name||'?'}</div></div>
+      <span style="background:${won?'#10B98122':'#EF444422'};color:${won?'#10B981':'#EF4444'};border:1px solid ${won?'#10B98144':'#EF444444'};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">${won?'Vitória':'Derrota'}</span>
+    </div>`;
+  }).join('');
+  body.innerHTML=html;
+}
+
+function openNewPlayerModal(){
+  document.getElementById('np-name').value='';
+  document.getElementById('np-height').value='';
+  document.getElementById('np-pos').value='';
+  document.getElementById('np-exp').value='';
+  openModal('modal-new-player');
+}
+function createPlayer(){
+  const name=document.getElementById('np-name').value.trim();
+  const pos=document.getElementById('np-pos').value;
+  const exp=document.getElementById('np-exp').value;
+  if(!name||!pos||!exp)return;
+  players.push({id:Date.now(),name,height:document.getElementById('np-height').value||'',position:pos,experience:exp,teamId:currentTeamId});
+  save();closeModal('modal-new-player');renderTeamDetailBody(currentTeamId);
+}
+
+let currentPlayerId=null;
+function openPlayerDetail(id){
+  currentPlayerId=id;
+  const p=players.find(pl=>pl.id===id);
+  const t=teams.find(t=>t.id===p.teamId);
+  const isCap=t&&t.captain===id;
+  const body=document.getElementById('player-detail-body');
+  body.innerHTML=`
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:${t?.color||'#3B82F6'}33;border:2px solid ${t?.color||'#3B82F6'};display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${t?.color||'#3B82F6'}" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <h2 style="margin:0 0 4px;">${p.name}</h2>
+      ${isCap?`<span style="background:#EAB30822;color:#EAB308;border:1px solid #EAB30844;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">★ Capitão</span>`:''}
+    </div>
+    ${[['Altura',p.height?p.height+' cm':'–'],['Posição',p.position],['Experiência',p.experience]].map(([k,v])=>`
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+        <span style="color:#64748B;font-size:14px;">${k}</span>
+        <span style="font-size:14px;font-weight:600;">${v}</span>
+      </div>`).join('')}
+    ${admin?`<div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="setCaptain(${id})" class="btn full sm" style="background:#EAB308;color:#000;">★ Definir Capitão</button>
+      <button onclick="removePlayer(${id})" class="btn full sm" style="background:#EF4444;color:#fff;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Remover</button></div>`:''}`;
+  openModal('modal-player-detail');
+}
+function setCaptain(pid){
+  const t=teams.find(t=>t.id===currentTeamId);
+  if(t)t.captain=pid;
+  save();closeModal('modal-player-detail');renderTeamDetailBody(currentTeamId);
+}
+function removePlayer(pid){
+  closeModal('modal-player-detail');
+  openConfirm('Tem certeza que deseja remover este jogador?',()=>{
+    players=players.filter(p=>p.id!==pid);
+    save();renderTeamDetailBody(currentTeamId);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GAMES
+// ═══════════════════════════════════════════════════════════════
+let gamesTab='schedule';
+function switchGamesTab(tab){
+  gamesTab=tab;
+  document.getElementById('tab-schedule').classList.toggle('active',tab==='schedule');
+  document.getElementById('tab-table').classList.toggle('active',tab==='table');
+  document.getElementById('games-schedule').style.display=tab==='schedule'?'block':'none';
+  document.getElementById('games-table').style.display=tab==='table'?'block':'none';
+}
+
+function renderGames(){
+  // ADM button
+  const admBtn=document.getElementById('games-adm-btn');
+  admBtn.innerHTML=admin?`<button onclick="openGameForm()" class="btn sm" style="background:#1D4ED8;color:#fff;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo</button>`:'';
+
+  const today=new Date().toISOString().split('T')[0];
+  const sorted=[...games].sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Schedule tab
+  const sch=document.getElementById('games-schedule');
+  if(!sorted.length){
+    sch.innerHTML=`<div style="background:#0A1628;border-radius:14px;padding:32px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p style="margin-top:12px;font-size:14px;">Nenhum jogo agendado</p></div>`;
+  } else {
+    sch.innerHTML=sorted.map(g=>{
+      const t1=teams.find(t=>t.id===g.team1Id);
+      const t2=teams.find(t=>t.id===g.team2Id);
+      const isToday=g.date===today;
+      const t1Color=t1?.color||'#3B82F6';
+      const t2Color=t2?.color||'#EF4444';
+      const admActions=admin?`<div class="game-card-actions">
+        <button onclick="openGameForm(${g.id})" class="btn sm" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar</button>
+        <button onclick="deleteGame(${g.id})" class="btn sm" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Apagar</button>
+      </div>`:''
+      return `<div class="game-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="color:#64748B;font-size:12px;">${g.date}</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge">${g.type}</span>
+            ${g.result?`<span class="badge" style="background:#10B98122;color:#10B981;border-color:#10B98144;">Finalizado</span>`:''}
+            ${isToday&&!g.result?`<span class="badge" style="background:#EAB30822;color:#EAB308;border-color:#EAB30844;">Hoje</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="flex:1;text-align:center;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${t1Color}33;border:2px solid ${t1Color};display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${t1Color}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div style="color:${getTextColor(t1Color)};font-weight:700;font-size:14px;">${t1?.name||'?'}</div>
+          </div>
+          <div style="text-align:center;padding:0 12px;">
+            ${g.result?`<div style="color:#F0F4FF;font-weight:900;font-size:22px;">${g.result.setsA} – ${g.result.setsB}</div>`:`<div style="color:#475569;font-weight:700;font-size:16px;">VS</div>`}
+          </div>
+          <div style="flex:1;text-align:center;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${t2Color}33;border:2px solid ${t2Color};display:flex;align-items:center;justify-content:center;margin:0 auto 6px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${t2Color}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div style="color:${getTextColor(t2Color)};font-weight:700;font-size:14px;">${t2?.name||'?'}</div>
+          </div>
+        </div>
+        ${admActions}
+      </div>`;
+    }).join('');
+  }
+
+  // Table tab - Bracket View
+  const tbl=document.getElementById('games-table');
+  if(!games.filter(g=>g.type==='Campeonato').length){
+    tbl.innerHTML=`<div style="background:#0A1628;border-radius:14px;padding:32px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;">Nenhum jogo de campeonato</div>`;
+  } else {
+    tbl.innerHTML=renderBracket();
+  }
+}
+
+function renderBracket(){
+  const campGames=games.filter(g=>g.type==='Campeonato');
+  if(!campGames.length)return `<div style="background:#0A1628;border-radius:14px;padding:32px;border:1px dashed rgba(59,130,246,.2);text-align:center;color:#475569;">Nenhum jogo de torneio registrado</div>`;
+  
+  // Helper: determina fase pela quantidade de jogos
+  function getRoundName(matchesCount){
+    switch(matchesCount){
+      case 1: return '🏆 FINAL';
+      case 2: return '🔸 SEMIFINAL';
+      case 4: return '🔸 QUARTAS DE FINAL';
+      case 8: return '🔸 OITAVAS DE FINAL';
+      case 16: return '🔸 32 AVOS';
+      default: return `🔸 RODADA (${matchesCount} jogos)`;
+    }
+  }
+  
+  let html=`<div style="display:flex;flex-direction:column;gap:24px;">
+    ${admin?`<div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button onclick="initializeBracket(8)" class="btn sm" style="background:#3B82F6;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">🌳 Bracket 8</button>
+      <button onclick="initializeBracket(16)" class="btn sm" style="background:#3B82F6;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">🌳 Bracket 16</button>
+      <button onclick="initializeBracket(32)" class="btn sm" style="background:#3B82F6;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">🌳 Bracket 32</button>
+      <button onclick="bulkDeleteGames()" class="btn sm" style="background:#EF4444;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">🗑️ Limpar Tudo</button>
+    </div>`:''}
+    ${champion?`<div style="background:linear-gradient(135deg,rgba(253,211,77,.2),rgba(245,158,11,.2));border:2px solid #FCD34D;border-radius:10px;padding:16px;text-align:center;box-shadow:0 0 20px rgba(253,211,77,.15);">
+      <div style="color:#FCD34D;font-size:32px;margin-bottom:8px;">🏆</div>
+      <div style="color:#F0F4FF;font-size:12px;letter-spacing:1px;font-weight:700;text-transform:uppercase;">Campeão da Competição</div>
+      <div style="color:#FCD34D;font-size:18px;font-weight:900;margin-top:8px;">${teams.find(t=>t.id===champion)?.name||'?'}</div>
+    </div>`:''}
+  `;
+  
+  // Agrupar por fase (quantidade)
+  const grouped={};
+  campGames.forEach(g=>{
+    const phKey=g.phase||'Inicial';
+    if(!grouped[phKey])grouped[phKey]=[];
+    grouped[phKey].push(g);
+  });
+  
+  Object.entries(grouped).forEach(([phase,phaseGames])=>{
+    const roundName=getRoundName(phaseGames.length);
+    html+=`<div>
+      <h2 style="color:#F0F4FF;font-size:18px;margin-bottom:16px;font-weight:700;">${roundName}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">`;
+    phaseGames.forEach(g=>{
+      const t1=teams.find(t=>t.id===g.team1Id);
+      const t2=teams.find(t=>t.id===g.team2Id);
+      const result=g.result;
+      html+=`<div style="background:#0D1F3C;border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px;overflow:visible;position:relative;">
+        ${admin?`<button onclick="deleteGameFromBracket(${g.id})" class="delete-btn-subtle" style="position:absolute;top:4px;right:4px;background:none;border:none;color:#EF4444;font-size:20px;cursor:pointer;width:24px;height:24px;padding:0;display:flex;align-items:center;justify-content:center;">✕</button>`:''}
+        <div onclick="showGameDetails(${g.id})" style="cursor:pointer;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="width:5px;height:5px;background:${t1?.color||'#3B82F6'};border-radius:50%;"></div>
+            <div style="flex:1;color:#F0F4FF;font-size:12px;font-weight:600;">${t1?.name||'?'}</div>
+            <div style="color:${result?.winner===t1?.id?'#10B981':'#94A3B8'};font-size:13px;font-weight:700;">${result?result.setsA:'-'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:5px;height:5px;background:${t2?.color||'#EF4444'};border-radius:50%;"></div>
+            <div style="flex:1;color:#F0F4FF;font-size:12px;font-weight:600;">${t2?.name||'?'}</div>
+            <div style="color:${result?.winner===t2?.id?'#10B981':'#94A3B8'};font-size:13px;font-weight:700;">${result?result.setsB:'-'}</div>
+          </div>
+        </div>
+        ${admin&&!result?`<div style="display:flex;gap:8px;border-top:1px solid rgba(59,130,246,.1);padding-top:12px;">
+          <button onclick="setWinner(${g.id},${g.team1Id})" class="btn sm" style="flex:1;background:rgba(59,130,246,.15);color:#3B82F6;border:none;border-radius:6px;padding:6px;font-size:11px;">${t1?.name.substring(0,12)}</button>
+          <button onclick="setWinner(${g.id},${g.team2Id})" class="btn sm" style="flex:1;background:rgba(59,130,246,.15);color:#3B82F6;border:none;border-radius:6px;padding:6px;font-size:11px;">${t2?.name.substring(0,12)}</button>
+        </div>`:''}
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  
+  html+=`</div>`;
+  return html;
+}
+
+function initializeBracket(teamCount){
+  if(!admin)return;
+  if(!confirm(`Criar bracket para ${teamCount} times?`))return;
+  
+  // Remove existing championship games
+  games=games.filter(g=>g.type!=='Campeonato');
+  
+  // Create ONLY first phase
+  const today=new Date();
+  const dateStr=today.toISOString().split('T')[0];
+  let matchId=Date.now();
+  
+  for(let i=0;i<teamCount;i+=2){
+    games.push({
+      id:matchId++,
+      date:dateStr,
+      team1Id:null,
+      team2Id:null,
+      type:'Campeonato',
+      phase:'Inicial',
+      result:null
+    });
+  }
+  
+  save();renderGames();alert(`✓ Bracket criado! ${teamCount} times na fase INICIAL`);
+}
+
+function isPhaseComplete(phase){
+  const phaseGames=games.filter(g=>g.type==='Campeonato'&&g.phase===phase);
+  if(phaseGames.length===0)return false;
+  return phaseGames.every(g=>g.result&&g.result.winner);
+}
+
+function createNextPhase(currentPhase,nextPhase){
+  // Check if next phase already exists
+  const alreadyExists=games.some(g=>g.type==='Campeonato'&&g.phase===nextPhase);
+  if(alreadyExists)return;
+  
+  const phaseGames=games
+    .filter(g=>g.type==='Campeonato'&&g.phase===currentPhase)
+    .sort((a,b)=>a.id-b.id);
+  
+  const winners=phaseGames.map(g=>g.result.winner);
+  
+  // Calculate next date (7 days after current phase)
+  const firstGame=phaseGames[0];
+  const currentDate=new Date(firstGame.date);
+  const nextDate=new Date(currentDate);
+  nextDate.setDate(nextDate.getDate()+7);
+  const dateStr=nextDate.toISOString().split('T')[0];
+  
+  let matchId=Date.now();
+  for(let i=0;i<winners.length;i+=2){
+    games.push({
+      id:matchId++,
+      date:dateStr,
+      team1Id:winners[i],
+      team2Id:winners[i+1],
+      type:'Campeonato',
+      phase:nextPhase,
+      result:null
+    });
+  }
+}
+
+function setWinner(gameId,winningTeamId){
+  if(!admin)return;
+  
+  const game=games.find(g=>g.id===gameId);
+  if(!game||game.result)return;
+  
+  game.result={
+    winner:winningTeamId,
+    setsA:winningTeamId===game.team1Id?2:0,
+    setsB:winningTeamId===game.team2Id?2:0,
+    sets:[{a:25,b:20},{a:25,b:22},{a:25,b:18}]
+  };
+  
+  // 📡 Sincronizar resultado com Firebase
+  if(window.fbSync&&window.fbSync.enabled){
+    const resultData={
+      gameId,
+      winner:winningTeamId,
+      phase:game.phase,
+      timestamp:Date.now(),
+      setsA:game.result.setsA,
+      setsB:game.result.setsB
+    };
+    window.fbSync.saveGameHistory(resultData);
+  }
+  
+  // Check if phase is complete and create next phase
+  const nextPhaseMap={
+    'Inicial':'Round of 16',
+    'Round of 16':'Quartas',
+    'Quartas':'Semi',
+    'Semi':'Final'
+  };
+  
+  const nextPhase=nextPhaseMap[game.phase];
+  if(nextPhase&&isPhaseComplete(game.phase)){
+    createNextPhase(game.phase,nextPhase);
+  }
+  
+  // If Final is complete, mark winner as champion
+  if(game.phase==='Final'&&isPhaseComplete('Final')){
+    champion=winningTeamId;
+  }
+  
+  save();
+  renderGames();
+}
+
+function generateNextPhase(currentPhase,nextPhase){
+  const phaseGames=games.filter(g=>g.type==='Campeonato'&&g.phase===currentPhase).sort((a,b)=>a.id-b.id);
+  const winners=phaseGames.map(g=>g.result?.winner).filter(w=>w);
+  
+  if(winners.length<2)return;
+  
+  const nextDate=new Date();nextDate.setDate(nextDate.getDate()+7);
+  const dateStr=nextDate.toISOString().split('T')[0];
+  
+  // Pair winners
+  for(let i=0;i<winners.length-1;i+=2){
+    games.push({
+      id:Date.now()+i,
+      date:dateStr,
+      team1Id:winners[i],
+      team2Id:winners[i+1],
+      type:'Campeonato',
+      phase:nextPhase,
+      result:null
+    });
+  }
+  
+  save();renderGames();alert(`✓ Próxima rodada gerada com ${Math.ceil(winners.length/2)} jogo${Math.ceil(winners.length/2)!==1?'s':''}!`);
+}
+
+function deleteGameFromBracket(gameId){
+  if(!admin)return;
+  if(!confirm('Remover este jogo?'))return;
+  games=games.filter(g=>g.id!==gameId);
+  save();
+  renderGames();
+}
+
+function bulkDeleteGames(){
+  if(!admin)return;
+  if(!confirm('Remover TODOS os jogos de campeonato? Esta ação não pode ser desfeita.'))return;
+  games=games.filter(g=>g.type!=='Campeonato');
+  champion=null;
+  save();
+  renderGames();
+}
+
+function showGameDetails(gameId){
+  const g=games.find(g=>g.id===gameId);
+  if(!g)return;
+  const t1=teams.find(t=>t.id===g.team1Id);
+  const t2=teams.find(t=>t.id===g.team2Id);
+  const result=g.result;
+  const t1Color=t1?.color||'#3B82F6';
+  const t2Color=t2?.color||'#EF4444';
+  
+  let content=`<div style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="text-align:center;flex:1;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${t1Color}33;border:2px solid ${t1Color};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${t1Color}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div style="color:${getTextColor(t1Color)};font-weight:700;font-size:14px;">${t1?.name||'?'}</div>
+      </div>
+      <div style="text-align:center;padding:0 12px;">
+        <div style="color:#F0F4FF;font-weight:900;font-size:24px;">${result?result.setsA:'—'}</div>
+      </div>
+      <div style="text-align:center;flex:1;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${t2Color}33;border:2px solid ${t2Color};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${t2Color}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div style="color:${getTextColor(t2Color)};font-weight:700;font-size:14px;">${t2?.name||'?'}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <span class="badge">${g.type}</span>
+      <span class="badge">${g.phase||'Grupos'}</span>
+      <span class="badge">${g.date}</span>
+      ${result?`<span class="badge" style="background:#10B98122;color:#10B981;border-color:#10B98144;">Finalizado</span>`:'<span class="badge" style="background:#EAB30822;color:#EAB308;border-color:#EAB30844;">Não iniciado</span>'}
+    </div>
+  </div>`;
+  
+  if(result){
+    content+=`<div style="background:#0D1F3C;border-radius:12px;overflow:hidden;border:1px solid rgba(59,130,246,.2);">
+      <div style="display:grid;grid-template-columns:repeat(${result.sets.length+1},1fr);background:rgba(59,130,246,.1);padding:10px;gap:8px;">
+        <div style="color:#64748B;font-size:11px;font-weight:700;text-align:center;">-</div>
+        ${result.sets.map((s,i)=>`<div style="color:#64748B;font-size:11px;font-weight:700;text-align:center;">SET ${i+1}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${result.sets.length+1},1fr);padding:12px;gap:8px;align-items:center;">
+        <div style="color:${getTextColor(t1Color)};font-size:12px;font-weight:700;text-align:center;">${t1?.name.substring(0,15)}</div>
+        ${result.sets.map(s=>`<div style="color:#F0F4FF;font-size:14px;font-weight:700;text-align:center;background:rgba(255,255,255,.05);padding:6px;border-radius:6px;">${s.a}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(${result.sets.length+1},1fr);padding:12px;gap:8px;align-items:center;border-top:1px solid rgba(59,130,246,.2);">
+        <div style="color:${getTextColor(t2Color)};font-size:12px;font-weight:700;text-align:center;">${t2?.name.substring(0,15)}</div>
+        ${result.sets.map(s=>`<div style="color:#F0F4FF;font-size:14px;font-weight:700;text-align:center;background:rgba(255,255,255,.05);padding:6px;border-radius:6px;">${s.b}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+  
+  document.getElementById('modal-game-details-content').innerHTML=content;
+  openModal('modal-game-details');
+}
+
+function openGameForm(id){
+  const form=document.getElementById('modal-game-form');
+  document.getElementById('game-form-title').textContent=id?'Editar Jogo':'Cadastrar Jogo';
+  document.getElementById('gf-btn-label').textContent=id?'Salvar Alterações':'Salvar Jogo';
+  document.getElementById('gf-id').value=id||'';
+  // Populate team selects
+  const opts='<option value="">Selecionar...</option>'+teams.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  document.getElementById('gf-t1').innerHTML=opts;
+  document.getElementById('gf-t2').innerHTML=opts;
+  if(id){
+    const g=games.find(g=>g.id===id);
+    if(g){
+      document.getElementById('gf-date').value=g.date;
+      document.getElementById('gf-t1').value=g.team1Id;
+      document.getElementById('gf-t2').value=g.team2Id;
+      document.getElementById('gf-type').value=g.type;
+    }
+  } else {
+    document.getElementById('gf-date').value='';
+    document.getElementById('gf-t1').value='';
+    document.getElementById('gf-t2').value='';
+    document.getElementById('gf-type').value='Amistoso';
+  }
+  openModal('modal-game-form');
+}
+
+function saveGameForm(){
+  const id=document.getElementById('gf-id').value;
+  const date=document.getElementById('gf-date').value;
+  const t1=Number(document.getElementById('gf-t1').value);
+  const t2=Number(document.getElementById('gf-t2').value);
+  const type=document.getElementById('gf-type').value;
+  if(!date||!t1||!t2||t1===t2)return;
+  if(id){
+    const g=games.find(g=>g.id===Number(id));
+    if(g){g.date=date;g.team1Id=t1;g.team2Id=t2;g.type=type;}
+  } else {
+    games.push({id:Date.now(),date,team1Id:t1,team2Id:t2,type,phase:type==='Campeonato'?'Inicial':'',result:null});
+  }
+  save();closeModal('modal-game-form');renderGames();renderScoreMenu();renderHome();
+}
+
+function deleteGame(id){
+  openConfirm('Tem certeza que deseja apagar este jogo? Esta ação não pode ser desfeita.',()=>{
+    games=games.filter(g=>g.id!==id);
+    save();renderGames();renderScoreMenu();renderHome();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LIVE SCORE ENGINE
+// ═══════════════════════════════════════════════════════════════
+let live={teamA:null,teamB:null,sets:[{a:0,b:0}],curSet:0,setsA:0,setsB:0,flipped:false,finished:false,maxSets:3,maxPts:25,gameId:null};
+
+function openLive(tA,tB,sets,pts,gameId){
+  live={teamA:tA,teamB:tB,sets:[{a:0,b:0}],curSet:0,setsA:0,setsB:0,flipped:false,finished:false,maxSets:Number(sets),maxPts:Number(pts),gameId:gameId||null};
+  renderLive();
+  document.getElementById('score-live').classList.add('active');
+  document.getElementById('main-nav').style.display='none';
+}
+function closeLive(){
+  document.getElementById('score-live').classList.remove('active');
+  document.getElementById('main-nav').style.display='flex';
+}
+function saveLiveResult(){
+  if(live.gameId){
+    const g=games.find(g=>g.id===live.gameId);
+    if(g){g.result={setsA:live.setsA,setsB:live.setsB,winner:live.setsA>live.setsB?live.teamA.id:live.teamB.id,sets:live.sets};}
+    save();renderGames();renderScoreMenu();renderHome();
+  }
+  closeLive();
+}
+function liveFlip(){live.flipped=!live.flipped;renderLive();}
+
+function addPt(rawSide){
+  if(live.finished)return;
+  const side=live.flipped?(rawSide==='a'?'b':'a'):rawSide;
+  const sets=[...live.sets];
+  const cur={...sets[live.curSet]};
+  cur[side]++;
+  const maxSets=Math.ceil(live.maxSets/2);
+  const diff=Math.abs(cur.a-cur.b);
+  const won=cur[side]>=live.maxPts&&diff>=2;
+  if(won){
+    if(side==='a')live.setsA++;else live.setsB++;
+    sets[live.curSet]=cur;live.sets=sets;
+    if(live.setsA>=maxSets||live.setsB>=maxSets){live.finished=true;renderLive();return;}
+    live.sets.push({a:0,b:0});live.curSet++;
+  } else {sets[live.curSet]=cur;live.sets=sets;}
+  
+  // 📡 Sincronizar score em tempo real com Firebase
+  if(window.fbSync && window.fbSync.enabled){
+    window.fbSync.syncScore(`live_game_${live.teamA.id}_${live.teamB.id}`, cur.a, cur.b);
+  }
+  
+  renderLive();
+}
+function undoPt(rawSide){
+  if(live.finished)return;
+  const side=live.flipped?(rawSide==='a'?'b':'a'):rawSide;
+  const cur={...live.sets[live.curSet]};
+  if(cur[side]>0)cur[side]--;
+  live.sets[live.curSet]=cur;
+  renderLive();
+}
+
+function renderLive(){
+  const dA=live.flipped?live.teamB:live.teamA;
+  const dB=live.flipped?live.teamA:live.teamB;
+  const cur=live.sets[live.curSet]||{a:0,b:0};
+  const sA=live.flipped?cur.b:cur.a;
+  const sB=live.flipped?cur.a:cur.b;
+  const sWA=live.flipped?live.setsB:live.setsA;
+  const sWB=live.flipped?live.setsA:live.setsB;
+
+  document.getElementById('sl-set-info').textContent=`Set ${live.curSet+1} de ${live.maxSets}`;
+  document.getElementById('sl-sets-won').textContent=`${sWA} – ${sWB} sets`;
+  document.getElementById('sl-name-a').textContent=dA?.name||'Time A';
+  document.getElementById('sl-name-a').style.color=dA?.color||'#3B82F6';
+  document.getElementById('sl-name-b').textContent=dB?.name||'Time B';
+  document.getElementById('sl-name-b').style.color=dB?.color||'#EF4444';
+  document.getElementById('sl-score-a').textContent=sA;
+  document.getElementById('sl-score-b').textContent=sB;
+  document.getElementById('sl-zone-a').style.background=`linear-gradient(135deg,${dA?.color||'#3B82F6'}33 0%,#020810 100%)`;
+  document.getElementById('sl-zone-b').style.background=`linear-gradient(315deg,${dB?.color||'#EF4444'}33 0%,#020810 100%)`;
+  const addBtnA=document.getElementById('sl-add-a');
+  addBtnA.style.borderColor=dA?.color||'#3B82F6';
+  addBtnA.style.background=(dA?.color||'#3B82F6')+'33';
+  addBtnA.querySelector('svg').setAttribute('stroke',dA?.color||'#3B82F6');
+  const addBtnB=document.getElementById('sl-add-b');
+  addBtnB.style.borderColor=dB?.color||'#EF4444';
+  addBtnB.style.background=(dB?.color||'#EF4444')+'33';
+  addBtnB.querySelector('svg').setAttribute('stroke',dB?.color||'#EF4444');
+  document.getElementById('sl-btns-a').style.display=live.finished?'none':'flex';
+  document.getElementById('sl-btns-b').style.display=live.finished?'none':'flex';
+  // Sets row
+  const row=document.getElementById('sl-sets-row');
+  row.innerHTML=live.sets.map((s,i)=>{
+    const dsa=live.flipped?s.b:s.a;
+    const dsb=live.flipped?s.a:s.b;
+    return `<div style="background:${i===live.curSet?'rgba(59,130,246,.2)':'rgba(255,255,255,.05)'};border-radius:10px;padding:6px 12px;border:1px solid ${i===live.curSet?'#3B82F6':'transparent'};font-size:13px;color:#94A3B8;font-weight:700;">${dsa}–${dsb}</div>`;
+  }).join('');
+  // Winner
+  const wd=document.getElementById('sl-winner');
+  if(live.finished){
+    const winner=live.setsA>live.setsB?(live.flipped?live.teamB:live.teamA):(live.flipped?live.teamA:live.teamB);
+    document.getElementById('sl-winner-name').textContent=`🏆 ${winner?.name} venceu!`;
+    wd.style.display='block';
+  } else wd.style.display='none';
+}
+
+function startScheduledGame(id){
+  const g=games.find(g=>g.id===id);
+  if(!g)return;
+  const t1=teams.find(t=>t.id===g.team1Id);
+  const t2=teams.find(t=>t.id===g.team2Id);
+  const sets=document.getElementById('sc-sets').value;
+  const pts=document.getElementById('sc-pts').value;
+  openLive(t1,t2,sets,pts,g.id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  QUICK GAME
+// ═══════════════════════════════════════════════════════════════
+let qgColorA=1,qgColorB=0;
+
+function buildColorPickers(){
+  ['a','b'].forEach((side,si)=>{
+    const el=document.getElementById('qg-colors-'+side);
+    const selected=side==='a'?qgColorA:qgColorB;
+    el.innerHTML=TEAM_COLORS.map((c,i)=>`<div class="color-dot ${i===selected?'selected':''}" style="background:${c.hex};" onclick="selectQGColor('${side}',${i})" title="${c.name}"></div>`).join('');
+  });
+  updateQGCards();
+}
+
+function selectQGColor(side,i){
+  if(side==='a')qgColorA=i;else qgColorB=i;
+  buildColorPickers();
+}
+
+function updateQGCards(){
+  const ca=TEAM_COLORS[qgColorA];const cb=TEAM_COLORS[qgColorB];
+  document.getElementById('qg-card-a').style.borderColor=ca.hex+'55';
+  document.getElementById('qg-dot-a').style.background=ca.hex;
+  document.getElementById('qg-card-b').style.borderColor=cb.hex+'55';
+  document.getElementById('qg-dot-b').style.background=cb.hex;
+  const na=document.getElementById('qg-name-a').value||'Time A';
+  const nb=document.getElementById('qg-name-b').value||'Time B';
+  document.getElementById('qg-prev-a').style.color=ca.hex;
+  document.getElementById('qg-prev-a').textContent=na;
+  document.getElementById('qg-prev-b').style.color=cb.hex;
+  document.getElementById('qg-prev-b').textContent=nb;
+}
+
+document.getElementById('qg-name-a').addEventListener('input',updateQGCards);
+document.getElementById('qg-name-b').addEventListener('input',updateQGCards);
+
+function openQGame(){
+  document.getElementById('qgame-screen').style.display='flex';
+  document.getElementById('main-nav').style.display='none';
+}
+function closeQGame(){
+  document.getElementById('qgame-screen').style.display='none';
+  document.getElementById('main-nav').style.display='flex';
+}
+function startQGame(){
+  const tA={name:'Time A',color:'#3B82F6'};
+  const tB={name:'Time B',color:'#EF4444'};
+  const sets=document.getElementById('qg-sets').value;
+  const pts=document.getElementById('qg-pts').value;
+  closeQGame();
+  openLive(tA,tB,sets,pts,null);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CLOSE MODAL ON BACKDROP CLICK
+// ═══════════════════════════════════════════════════════════════
+document.querySelectorAll('.modal-bg').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+document.getElementById('confirm-modal').addEventListener('click',e=>{if(e.target===document.getElementById('confirm-modal'))closeConfirm();});
+
+// Init
+renderAll();
+</script>
+</body>
+</html>
